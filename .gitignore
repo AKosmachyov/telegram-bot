@@ -1,0 +1,8 @@
+# Editor
+.vscode/
+
+# Dependency directories
+node_modules/
+
+# App files
+config.json
