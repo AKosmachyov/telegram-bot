@@ -43,8 +43,6 @@ bot.start(async (ctx) => {
 
     const { from } = params;
 
-    // TODO check user in the DB
-
 	const user = await User.findOneAndUpdate(
 		{ userId: id },
 		{
@@ -55,8 +53,13 @@ bot.start(async (ctx) => {
 			}
 		},
 		{ upsert: true, new: true }
-	);
-    await Chat.findOneAndUpdate({ chatId: from }, { $push: { users: user } });
+    );
+    
+    const chat = await Chat.findOne({ chatId: from });
+    if (chat && chat.users.indexOf(user.id) == -1) {
+        chat.users.push(user);
+        chat.save();
+    }
 
 	ctx.reply(`${thankYou} ${forRegistration}, ${first_name}!`);
 });
