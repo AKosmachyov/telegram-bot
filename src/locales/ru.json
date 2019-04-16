@@ -2,5 +2,6 @@
     "thankYou": "Большое спасибо",
     "forRegistration": "за регистрацию",
     "completeRegistration": "Пройдите пожалуйста регистрацию: ",
-    "errorWrongRegistration": "Ошибка: попробуйте перейти по ссылке ещё раз"
+    "errorWrongRegistration": "Ошибка: попробуйте перейти по ссылке ещё раз",
+    "pollStarted": "Ваш опрос создан"
 }

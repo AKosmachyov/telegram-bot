@@ -7,4 +7,25 @@ const UserSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', UserSchema);
 
-module.exports = User;
+function getUser(id) {
+	return User.findOne({userId: id});
+}
+
+function updateUser(id, first_name, last_name) {
+	return User.findOneAndUpdate(
+		{ userId: id },
+		{
+			$set: {
+				userId: id,
+				firstName: first_name,
+				lastName: last_name
+			}
+		},
+		{ upsert: true, new: true }
+	);
+}
+
+module.exports = {
+	updateUser,
+	getUser
+};

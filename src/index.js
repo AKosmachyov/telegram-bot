@@ -7,14 +7,13 @@ const translation = require('./locales/ru.json');
 const utils = require('./utils');
 
 const db = require('./db/index');
-const User = require('./db/User');
-const Chat = require('./db/Chat');
+
+const pollOptions = [ 'На паре 👨🏼‍💻', 'В пути 🚕', 'Отсутствую 👣' ];
 
 const keyboard = {
 	keyboard: [ [ { text: 'На паре 👨🏼‍💻' }, { text: 'В пути 🚕' }, { text: 'Отсутствую 👣' } ] ],
 	one_time_keyboard: true
 };
-
 const pollMarkup = Extra.markup(keyboard);
 
 const bot = new Telegraf(config.BOT_TOKEN);
@@ -25,8 +24,7 @@ bot.on('new_chat_members', (ctx) => {
 	const { me, message: { chat: { id, title, type }, new_chat_member: { username } } } = ctx;
 
 	if (username === me) {
-		const chat = new Chat({ chatId: id, users: [], title, type });
-		chat.save();
+		ctx.db.Chat.addChat(id, title, type);
 		ctx.reply(`${translation.completeRegistration} https://telegram.me/${me}?start=from/${id}`);
 	}
 });
@@ -41,31 +39,32 @@ bot.start(async (ctx) => {
 		ctx.reply(translation.errorWrongRegistration);
 	}
 
-    const { from } = params;
+	const { from } = params;
 
-	const user = await User.findOneAndUpdate(
-		{ userId: id },
-		{
-			$set: {
-				userId: id,
-				firstName: first_name,
-				lastName: last_name
-			}
-		},
-		{ upsert: true, new: true }
-    );
-    
-    const chat = await Chat.findOne({ chatId: from });
-    if (chat && chat.users.indexOf(user.id) == -1) {
-        chat.users.push(user);
-        chat.save();
-    }
-
+	const user = await ctx.db.User.updateUser(id, first_name, last_name);
+	await ctx.db.Chat.addUser(from, user);
 	ctx.reply(`${thankYou} ${forRegistration}, ${first_name}!`);
 });
 
-bot.command('poll', (ctx) => {
-	ctx.reply('Help message', Extra.markup(keyboard));
+bot.command('poll', async (ctx) => {
+	const { from: { id } } = ctx;
+	const user = await ctx.db.User.getUser(id);
+	const chats = await ctx.db.Chat.getUserChats(user.id);
+
+	const chat = chats[0];
+
+	// const options = pollOptions.map((el, i) => ({
+		// title: el,
+		// value: i
+	// }));
+	// await ctx.db.Poll.addPoll('Проверка присутствия', options, chat);
+
+	ctx.reply(translation.pollStarted);
+
+	chat.users.forEach(user => {
+		ctx.telegram.sendMessage(user.userId, 'test', pollMarkup);
+	});
+	// ctx.reply('Help message', Extra.markup(keyboard));
 });
 
 bot.command('test', (ctx) => {
