@@ -35,6 +35,17 @@ function addPoll(title, options, chat) {
     return poll.save();
 }
 
+function updateAnswer(pollId, user, answer) {
+	return Poll.findOneAndUpdate(
+		{ _id: pollId },
+		{ $push: { user, value: answer} },
+		// { upsert: true, new: true }
+	)
+	// q.then(console.log, (err) => console.log('err', err))
+	// return q;
+}
+
 module.exports = {
-	addPoll
+	addPoll,
+	updateAnswer
 };

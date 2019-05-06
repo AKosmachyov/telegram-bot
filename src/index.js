@@ -10,22 +10,18 @@ const db = require('./db/index');
 
 const pollOptions = [ 'На паре 👨🏼‍💻', 'В пути 🚕', 'Отсутствую 👣' ];
 
-const keyboard = {
-	keyboard: [ [ { text: 'На паре 👨🏼‍💻' }, { text: 'В пути 🚕' }, { text: 'Отсутствую 👣' } ] ],
-	one_time_keyboard: true
-};
-const pollMarkup = Extra.markup(keyboard);
-
 const bot = new Telegraf(config.BOT_TOKEN);
 
 bot.context.db = db;
+// bot.use(Telegraf.log());
 
 bot.on('new_chat_members', (ctx) => {
 	const { me, message: { chat: { id, title, type }, new_chat_member: { username } } } = ctx;
 
 	if (username === me) {
 		ctx.db.Chat.addChat(id, title, type);
-		ctx.reply(`${translation.completeRegistration} https://telegram.me/${me}?start=from/${id}`);
+		const botLink = utils.createLinkToBot(me, id);
+		ctx.reply(`${translation.completeRegistration} ${botLink}`);
 	}
 });
 
@@ -36,7 +32,7 @@ bot.start(async (ctx) => {
 	const params = utils.extractParams(text);
 
 	if (!params.from) {
-		ctx.reply(translation.errorWrongRegistration);
+		return ctx.reply(translation.errorWrongRegistration);
 	}
 
 	const { from } = params;
@@ -53,26 +49,28 @@ bot.command('poll', async (ctx) => {
 
 	const chat = chats[0];
 
-	// const options = pollOptions.map((el, i) => ({
-		// title: el,
-		// value: i
-	// }));
-	// await ctx.db.Poll.addPoll('Проверка присутствия', options, chat);
-
+	const options = pollOptions.map((el, i) => ({ title: el, value: i }));
+	const poll = await ctx.db.Poll.addPoll('Проверка присутствия', options, chat);
+	console.log(poll);
 	ctx.reply(translation.pollStarted);
-
-	chat.users.forEach(user => {
-		ctx.telegram.sendMessage(user.userId, 'test', pollMarkup);
-	});
-	// ctx.reply('Help message', Extra.markup(keyboard));
+	
+	const pollMarkup = utils.createPollMarkup({pollId: poll.id, options});
+	chat.users.forEach(user => ctx.telegram.sendMessage(user.userId, poll.title, pollMarkup));
 });
 
 bot.command('test', (ctx) => {
-	ctx.reply('Help message', Extra.markup(Markup.removeKeyboard()));
+	ctx.reply('Will close keyboard', Extra.markup(Markup.removeKeyboard()));
 });
 
-// bot.help((ctx) => ctx.reply('Help message'));
-bot.on('message', async (ctx) => {
-	ctx.reply('ok');
+bot.action(/poll_(?<pollId>.*?)_(?<answer>.*)/, async (ctx) => {
+	const { from: { id }, match: { groups: { pollId, answer } } } = ctx;
+	const user = await ctx.db.User.getUser(id);
+	await ctx.db.Poll.updateAnswer(pollId, user, answer);
+	return ctx.answerCbQuery(translation.thanksForTheAnswer);
 });
+
+bot.action(/.+/, (ctx) => {
+	return ctx.answerCbQuery(`Oh, ${ctx.match[0]}! Great choice`)
+});
+
 bot.launch();

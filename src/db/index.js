@@ -13,7 +13,7 @@ mongoose.connect(config.DB_URL);
 
 const db = mongoose.connection;
 
-db.on('error', (err) => console.error('connection error:', err));
+db.on('error', (err) => console.error('DB connection error:', err));
 db.once('open', () => console.log('DB connected'));
 
 module.exports = {

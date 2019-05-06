@@ -29,8 +29,6 @@ async function addUser(chatId, user) {
 	}
 }
 
-function addPoll() {}
-
 module.exports = {
     getChat,
 	addChat,
