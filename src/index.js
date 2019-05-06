@@ -51,7 +51,6 @@ bot.command('poll', async (ctx) => {
 
 	const options = pollOptions.map((el, i) => ({ title: el, value: i }));
 	const poll = await ctx.db.Poll.addPoll('Проверка присутствия', options, chat);
-	console.log(poll);
 	ctx.reply(translation.pollStarted);
 	
 	const pollMarkup = utils.createPollMarkup({pollId: poll.id, options});

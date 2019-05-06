@@ -35,14 +35,15 @@ function addPoll(title, options, chat) {
     return poll.save();
 }
 
-function updateAnswer(pollId, user, answer) {
-	return Poll.findOneAndUpdate(
-		{ _id: pollId },
-		{ $push: { user, value: answer} },
-		// { upsert: true, new: true }
-	)
-	// q.then(console.log, (err) => console.log('err', err))
-	// return q;
+async function updateAnswer(pollId, user, answerOption) {
+	const poll = await Poll.findOne({_id: pollId});
+	const answer = poll.answers.find(answer => answer.user.equals(user.id));
+	if (answer) {
+		 answer.value = answerOption;
+	} else {
+		poll.answers.push( { value: answer, user: user } )
+	}
+	return await poll.save();
 }
 
 module.exports = {
