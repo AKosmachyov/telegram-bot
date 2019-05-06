@@ -40,6 +40,10 @@ bot.start(async (ctx) => {
 	const user = await ctx.db.User.updateUser(id, first_name, last_name);
 	await ctx.db.Chat.addUser(from, user);
 	ctx.reply(`${thankYou} ${forRegistration}, ${first_name}!`);
+
+	const chat = await ctx.db.Chat.getChat(from);
+	const polls = await ctx.db.Poll.getActivePollsForChat(chat._id);
+	polls.forEach(poll => sendPoll(ctx, [user], poll))
 });
 
 bot.command('poll', async (ctx) => {
@@ -53,9 +57,13 @@ bot.command('poll', async (ctx) => {
 	const poll = await ctx.db.Poll.addPoll('Проверка присутствия', options, chat);
 	ctx.reply(translation.pollStarted);
 	
-	const pollMarkup = utils.createPollMarkup({pollId: poll.id, options});
-	chat.users.forEach(user => ctx.telegram.sendMessage(user.userId, poll.title, pollMarkup));
+	sendPoll(ctx, chat.users, poll)
 });
+
+function sendPoll(ctx, users, poll) {
+	const pollMarkup = utils.createPollMarkup({ pollId: poll.id, options: poll.options });
+	users.forEach(user => ctx.telegram.sendMessage(user.userId, poll.title, pollMarkup));
+}
 
 bot.command('test', (ctx) => {
 	ctx.reply('Will close keyboard', Extra.markup(Markup.removeKeyboard()));
@@ -64,12 +72,14 @@ bot.command('test', (ctx) => {
 bot.action(/poll_(?<pollId>.*?)_(?<answer>.*)/, async (ctx) => {
 	const { from: { id }, match: { groups: { pollId, answer } } } = ctx;
 	const user = await ctx.db.User.getUser(id);
-	await ctx.db.Poll.updateAnswer(pollId, user, answer);
-	return ctx.answerCbQuery(translation.thanksForTheAnswer);
-});
+	const poll = await ctx.db.Poll.getPoll(pollId);
 
-bot.action(/.+/, (ctx) => {
-	return ctx.answerCbQuery(`Oh, ${ctx.match[0]}! Great choice`)
+	if (poll && poll.endDate > Date.now()) {
+		await ctx.db.Poll.updateAnswer(poll, user, answer);
+		return ctx.answerCbQuery(translation.thanksForTheAnswer);
+	} else {
+		return ctx.answerCbQuery(translation.pollUnavailable);
+	}	
 });
 
 bot.launch();

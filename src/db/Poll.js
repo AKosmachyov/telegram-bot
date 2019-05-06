@@ -35,8 +35,15 @@ function addPoll(title, options, chat) {
     return poll.save();
 }
 
-async function updateAnswer(pollId, user, answerOption) {
-	const poll = await Poll.findOne({_id: pollId});
+function getPoll(pollId) {
+	return Poll.findOne({_id: pollId});
+}
+
+function getActivePollsForChat(chatId) {
+	return Poll.find({ chat: chatId, endDate: { $gt: Date.now() } });
+}
+
+async function updateAnswer(poll, user, answerOption) {
 	const answer = poll.answers.find(answer => answer.user.equals(user.id));
 	if (answer) {
 		 answer.value = answerOption;
@@ -47,6 +54,8 @@ async function updateAnswer(pollId, user, answerOption) {
 }
 
 module.exports = {
+	getPoll,
+	getActivePollsForChat,
 	addPoll,
 	updateAnswer
 };
