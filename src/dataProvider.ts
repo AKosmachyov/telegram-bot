@@ -3,16 +3,18 @@ export interface DataProvider {
 
 	addChat(options: { telegramId: number; title: string; chatType: string }): Promise<Chat>;
 	getChat(telegramId: number): Promise<Chat>;
-	// getChatForUser(userId: number): Promise<Chat[]>;
+	getChatForUser(userId: number): Promise<Chat[]>;
 	addUserForChat(chatId: number, user: User): Promise<void>;
 
-	// getUser(telegramId: number): Promise<User>;
+	getUser(telegramId: number): Promise<User>;
 	addOrUpdateUser(options: { telegramId: number; firstName: string; lastName: string }): Promise<User>;
 
-	// addPoll(poll: Poll): Promise<Poll>;
+	addPoll(options: {title: string, chat: Chat, pollOptions: PollOption[]}): Promise<Poll>;
 	// getPoll(id: number): Promise<Poll>;
 	// getActivePollsForChat(id: number): Promise<Poll[]>;
 	// addOrUpdateAnswer(poll: Poll, user: User, answer: string): Promise<PollAnswer>;
+
+	createPollOption(title: string, value: string): PollOption;
 }
 
 export interface Chat {

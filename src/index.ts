@@ -1,6 +1,6 @@
 import Telegraf, { Extra, Markup, ContextMessageUpdate, Composer } from 'telegraf';
 
-import { DataProvider } from './dataProvider';
+import { DataProvider, PollOption } from './dataProvider';
 import mongooseProvider from './mongoose';
 import { createLinkToBot, extractParams } from './utils';
 import RUTranslates from './locales/ru';
@@ -59,16 +59,21 @@ bot.start(async (ctx) => {
 	// polls.forEach((poll) => sendPoll(ctx, [ user ], poll));
 });
 
-// bot.command('poll', async (ctx) => {
-// const { from: { id } } = ctx;
-// const user = await ctx.dataProvider.getUser(id);
-// const chats = await ctx.dataProvider.getChatForUser(user.id);
+bot.command('poll', async (ctx) => {
+	const { from: { id } } = ctx;
+	const user = await ctx.dataProvider.getUser(id);
+	const chats = await ctx.dataProvider.getChatForUser(user.id);
 
-// const chat = chats[0];
+	const chat = chats[0];
 
-// const options = pollOptions.map((el, i) => ({ title: el, value: i }));
-// const poll = await ctx.db.Poll.addPoll('Проверка присутствия', options, chat);
-// ctx.reply(translation.pollStarted);
+	const options: PollOption[] = pollOptions.map((el, i) => ctx.dataProvider.createPollOption(el, i.toString()));
+	const poll = await ctx.dataProvider.addPoll({
+		title: 'Проверка присутствия',
+		chat: chat,
+		pollOptions: options
+	});
+	ctx.reply(RUTranslates.pollStarted);
+});
 
 // function sendPoll(ctx, users, poll) {
 // const pollMarkup = createPollMarkup({ pollId: poll.id, options: poll.options });

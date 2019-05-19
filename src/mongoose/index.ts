@@ -1,9 +1,10 @@
-import { DataProvider, Chat, User, Poll, PollAnswer } from '../dataProvider';
+import { DataProvider, Chat, User, Poll, PollAnswer, PollOption } from '../dataProvider';
 import { Connection, set, connect, connection, Types } from 'mongoose';
 
 import UserModel from './UserModel';
 import ChatModel from './ChatModel';
 import PollModel from './PollModel';
+import { strict } from 'assert';
 
 const config = require('../../config.json');
 
@@ -35,23 +36,20 @@ class MongooseProvider implements DataProvider {
 		return ChatModel.findOne({ telegramId });
 	}
 
-	// getChatForUser(userId: number): Promise<Chat[]> {
-	// 	return ChatModel.find({ users: userId }).populate('users');
-	// }
+	getChatForUser(userId: number): Promise<Chat[]> {
+		return ChatModel.find({ users: userId }).populate('users');
+	}
 
 	async addUserForChat(chatId: number, user: User): Promise<void> {
-		await ChatModel.updateOne(
-			{ _id: chatId },
-			{ $addToSet: { users: Types.ObjectId(user.id) } }
-		);
+		await ChatModel.updateOne({ _id: chatId }, { $addToSet: { users: Types.ObjectId(user.id) } });
 		return Promise.resolve();
 	}
 
 	// User
 
-	// getUser(telegramId: number): Promise<User> {
-	// return UserModel.findOne({ userId: telegramId });
-	// }
+	getUser(telegramId: number): Promise<User> {
+		return UserModel.findOne({ telegramId: telegramId });
+	}
 
 	addOrUpdateUser(options: { telegramId: number; firstName: string; lastName: string }): Promise<User> {
 		const { telegramId, firstName, lastName } = options;
@@ -70,20 +68,26 @@ class MongooseProvider implements DataProvider {
 
 	// // Poll
 
-	// addPoll(poll: Poll): Promise<Poll> {
-	// 	const createDate = new Date().toISOString();
-	// 	const endDate = new Date();
-	// 	endDate.setHours(endDate.getHours() + 1);
+	addPoll(options: {title: string, chat: Chat, pollOptions: PollOption[]}): Promise<Poll> {
+		const { title, chat, pollOptions } = options;
 
-	// 	const poll = new Poll({
-	// 		title,
-	// 		options,
-	// 		chat,
-	// 		createDate: createDate,
-	// 		endDate: endDate.toISOString()
-	// 	});
-	// 	return poll.save();
-	// }
+		const now = new Date();
+		const expirationDate = new Date();
+		expirationDate.setHours(now.getHours() + 1);
+
+		const createDate = now.toISOString();
+		const endDate = expirationDate.toISOString();
+
+		const poll = new PollModel({
+			chat,
+			title,
+			createDate,
+			endDate,
+			pollOptions
+		})
+
+		return poll.save();
+	}
 
 	// getPoll(id: number): Promise<Poll> {
 	// 	return Poll.findOne({ _id: pollId });
@@ -102,6 +106,15 @@ class MongooseProvider implements DataProvider {
 	// 	}
 	// 	return await poll.save();
 	// }
+
+	//
+
+	createPollOption(title: string, value: string): PollOption {
+		return {
+			title,
+			value
+		}
+	} 
 }
 
 const mongooseProvider = new MongooseProvider();

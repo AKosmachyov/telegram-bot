@@ -6,7 +6,7 @@ const PollSchema = new Schema({
 	createDate: Date,
 	endDate: Date,
 
-	options: [
+	pollOptions: [
 		{
 			title: String,
 			value: String
