@@ -68,7 +68,7 @@ class MongooseProvider implements DataProvider {
 
 	// // Poll
 
-	addPoll(options: {title: string, chat: Chat, pollOptions: PollOption[]}): Promise<Poll> {
+	addPoll(options: { title: string; chat: Chat; pollOptions: PollOption[] }): Promise<Poll> {
 		const { title, chat, pollOptions } = options;
 
 		const now = new Date();
@@ -84,7 +84,7 @@ class MongooseProvider implements DataProvider {
 			createDate,
 			endDate,
 			pollOptions
-		})
+		});
 
 		return poll.save();
 	}
@@ -93,9 +93,9 @@ class MongooseProvider implements DataProvider {
 	// 	return Poll.findOne({ _id: pollId });
 	// }
 
-	// getActivePollsForChat(id: number): Promise<Poll[]> {
-	// return PollModel.find({ chat: id, endDate: { $gt: Date.now() } });
-	// }
+	getActivePollsForChat(id: number): Promise<Poll[]> {
+		return PollModel.find({ chat: id, endDate: { $gt: Date.now() } });
+	}
 
 	// addOrUpdateAnswer(poll: Poll, user: User, answer: string): Promise<PollAnswer> {
 	// 	const answer = poll.answers.find((answer) => answer.user.equals(user.id));
@@ -110,11 +110,8 @@ class MongooseProvider implements DataProvider {
 	//
 
 	createPollOption(title: string, value: string): PollOption {
-		return {
-			title,
-			value
-		}
-	} 
+		return { title, value };
+	}
 }
 
 const mongooseProvider = new MongooseProvider();

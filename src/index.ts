@@ -1,8 +1,8 @@
 import Telegraf, { Extra, Markup, ContextMessageUpdate, Composer } from 'telegraf';
 
-import { DataProvider, PollOption } from './dataProvider';
+import { DataProvider, PollOption, User, Poll } from './dataProvider';
 import mongooseProvider from './mongoose';
-import { createLinkToBot, extractParams } from './utils';
+import { createLinkToBot, extractParams, createPollMarkup } from './utils';
 import RUTranslates from './locales/ru';
 
 const config = require('../config.json');
@@ -51,12 +51,12 @@ bot.start(async (ctx) => {
 		const { from } = params;
 		const chat = await ctx.dataProvider.getChat(from);
 		await ctx.dataProvider.addUserForChat(chat.id, user);
+
+		const polls = await ctx.dataProvider.getActivePollsForChat(chat.id);
+		polls.forEach((poll) => sendPoll(ctx, [ user ], poll));
 	}
 
 	ctx.reply(`${thankYou} ${forRegistration}, ${first_name}!`);
-
-	// const polls = await ctx.dataProvider.getActivePollsForChat(chat.id);
-	// polls.forEach((poll) => sendPoll(ctx, [ user ], poll));
 });
 
 bot.command('poll', async (ctx) => {
@@ -73,12 +73,13 @@ bot.command('poll', async (ctx) => {
 		pollOptions: options
 	});
 	ctx.reply(RUTranslates.pollStarted);
+	sendPoll(ctx, chat.users, poll);
 });
 
-// function sendPoll(ctx, users, poll) {
-// const pollMarkup = createPollMarkup({ pollId: poll.id, options: poll.options });
-// users.forEach((user) => ctx.telegram.sendMessage(user.userId, poll.title, pollMarkup));
-// }
+function sendPoll(ctx, users: User[], poll: Poll) {
+	const pollMarkup = createPollMarkup({ pollId: poll.id, pollOptions: poll.pollOptions });
+	users.forEach((user) => ctx.telegram.sendMessage(user.telegramId, poll.title, pollMarkup));
+}
 
 bot.command('test', (ctx) => {
 	ctx.reply('Will close keyboard');
