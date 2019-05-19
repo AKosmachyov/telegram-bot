@@ -5,5 +5,6 @@ export default {
     errorWrongRegistration: "Ошибка: попробуйте перейти по ссылке ещё раз",
     pollStarted: "Ваш опрос создан",
     thanksForTheAnswer: "Спасибо! Ваш ответ принят",
-    pollUnavailable: "Опрос больше недоступен"
+    pollUnavailable: "Опрос больше недоступен",
+    pollNotExist: "Данный опрос не найден!"
 }

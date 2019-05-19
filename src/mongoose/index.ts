@@ -35,11 +35,11 @@ class MongooseProvider implements DataProvider {
 		return ChatModel.findOne({ telegramId });
 	}
 
-	getChatForUser(userId: number): Promise<Chat[]> {
+	getChatForUser(userId: string): Promise<Chat[]> {
 		return ChatModel.find({ users: userId }).populate('users');
 	}
 
-	async addUserForChat(chatId: number, user: User): Promise<void> {
+	async addUserForChat(chatId: string, user: User): Promise<void> {
 		await ChatModel.updateOne({ _id: chatId }, { $addToSet: { users: Types.ObjectId(user.id) } });
 		return Promise.resolve();
 	}
@@ -88,11 +88,15 @@ class MongooseProvider implements DataProvider {
 		return poll.save();
 	}
 
-	getPoll(id: number): Promise<Poll> {
-		return PollModel.findOne({ _id: id });
+	async getPoll(id: string, withUser = false): Promise<Poll> {
+		const result = PollModel.findOne({ _id: id });
+		if (withUser) {
+			return result.populate('answers.user');
+		}
+		return result;
 	}
 
-	getActivePollsForChat(id: number): Promise<Poll[]> {
+	getActivePollsForChat(id: string): Promise<Poll[]> {
 		return PollModel.find({ chat: id, endDate: { $gt: Date.now() } });
 	}
 

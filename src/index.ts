@@ -2,7 +2,7 @@ import Telegraf, { Extra, Markup, ContextMessageUpdate, Composer } from 'telegra
 
 import { DataProvider, PollOption, User, Poll } from './dataProvider';
 import mongooseProvider from './mongoose';
-import { createLinkToBot, extractParams, createPollMarkup } from './utils';
+import { createLinkToBot, extractParams, createPollMarkup, createResult } from './utils';
 import RUTranslates from './locales/ru';
 
 const config = require('../config.json');
@@ -98,6 +98,15 @@ bot.command('test', (ctx) => {
 	await ctx.dataProvider.addOrUpdateAnswer(poll, user, answer);
 	return ctx.answerCbQuery(RUTranslates.thanksForTheAnswer);
 });
+
+bot.command('result', async (ctx) => {
+	const poll = await ctx.dataProvider.getPoll('5ce1bdd9d7392ab17e5bdc0d', true);
+	if (!poll) {
+		ctx.reply(RUTranslates.pollNotExist);
+		return;
+	}
+	ctx.reply(createResult(poll));
+})
 
 bot.context.dataProvider = mongooseProvider;
 bot.context.dataProvider.init().then(
