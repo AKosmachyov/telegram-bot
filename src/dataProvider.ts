@@ -1,18 +1,18 @@
 export interface DataProvider {
-    init(): Promise<any>;
+	init(): Promise<any>;
 
-    addChat(options: { telegramId: number, title: string, chatType: string }): Promise<Chat>;
-    getChat(id: number): Promise<Chat>;
-    getChatForUser(userId: number): Promise<Chat[]>;
-    addUserForChat(id: number, user: User): Promise<void>;
-    
-    getUser(telegramId: number): Promise<User>;
-    addOrUpdateUser(user: User): Promise<void>;
-    
-    addPoll(poll: Poll): Promise<Poll>;
-    getPoll(id: number): Promise<Poll>;
-    getActivePollsForChat(id: number): Promise<Poll>;
-    addOrUpdateAnswer(poll: Poll, user: User, answer: string): Promise<PollAnswer>;
+	addChat(options: { telegramId: number; title: string; chatType: string }): Promise<Chat>;
+	getChat(telegramId: number): Promise<Chat>;
+	// getChatForUser(userId: number): Promise<Chat[]>;
+	addUserForChat(chatId: number, user: User): Promise<void>;
+
+	// getUser(telegramId: number): Promise<User>;
+	addOrUpdateUser(options: { telegramId: number; firstName: string; lastName: string }): Promise<User>;
+
+	// addPoll(poll: Poll): Promise<Poll>;
+	// getPoll(id: number): Promise<Poll>;
+	// getActivePollsForChat(id: number): Promise<Poll[]>;
+	// addOrUpdateAnswer(poll: Poll, user: User, answer: string): Promise<PollAnswer>;
 }
 
 export interface Chat {
@@ -35,9 +35,9 @@ export interface Poll {
 	chat: Chat;
 	title: string;
 	createDate: Date;
-    endDate: Date;
-    pollOptions: PollOption[];
-    answers: PollAnswer[];
+	endDate: Date;
+	pollOptions: PollOption[];
+	answers: PollAnswer[];
 }
 
 type PollValue = string;
