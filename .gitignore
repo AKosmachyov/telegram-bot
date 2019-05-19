@@ -1,8 +1,10 @@
 # Editor
 .vscode/
+.idea/
 
 # Dependency directories
 node_modules/
 
 # App files
 config.json
+/dist

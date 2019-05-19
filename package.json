@@ -7,10 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "AKosmachyov",
   "license": "ISC",
   "dependencies": {
     "mongoose": "5.5.5",
-    "telegraf": "3.29.0"
+    "telegraf": "3.29"
   }
 }
