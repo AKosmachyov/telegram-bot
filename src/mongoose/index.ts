@@ -4,7 +4,6 @@ import { Connection, set, connect, connection, Types } from 'mongoose';
 import UserModel from './UserModel';
 import ChatModel from './ChatModel';
 import PollModel from './PollModel';
-import { strict } from 'assert';
 
 const config = require('../../config.json');
 
@@ -89,23 +88,40 @@ class MongooseProvider implements DataProvider {
 		return poll.save();
 	}
 
-	// getPoll(id: number): Promise<Poll> {
-	// 	return Poll.findOne({ _id: pollId });
-	// }
+	getPoll(id: number): Promise<Poll> {
+		return PollModel.findOne({ _id: id });
+	}
 
 	getActivePollsForChat(id: number): Promise<Poll[]> {
 		return PollModel.find({ chat: id, endDate: { $gt: Date.now() } });
 	}
 
-	// addOrUpdateAnswer(poll: Poll, user: User, answer: string): Promise<PollAnswer> {
-	// 	const answer = poll.answers.find((answer) => answer.user.equals(user.id));
-	// 	if (answer) {
-	// 		answer.value = answerOption;
-	// 	} else {
-	// 		poll.answers.push({ value: answer, user: user });
-	// 	}
-	// 	return await poll.save();
-	// }
+	async addOrUpdateAnswer(poll: Poll, user: User, answer: string): Promise<PollAnswer> {
+		const userId = Types.ObjectId(user.id);
+		const forInsert = {
+			user: userId,
+			answer: answer
+		};
+
+		const updateResult = await PollModel.updateOne(
+			{ _id: poll.id },
+			{
+				$set: {
+					'answers.$[el]': forInsert
+				}
+			},
+			{
+				arrayFilters: [ { 'el.user': userId } ],
+				upsert: true
+			}
+		);
+
+		if (updateResult.nModified == 0) {
+			return PollModel.updateOne({ _id: poll.id }, { $set: { answers: forInsert } });
+		}
+
+		return updateResult;
+	}
 
 	//
 

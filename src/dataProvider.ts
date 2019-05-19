@@ -10,9 +10,9 @@ export interface DataProvider {
 	addOrUpdateUser(options: { telegramId: number; firstName: string; lastName: string }): Promise<User>;
 
 	addPoll(options: { title: string; chat: Chat; pollOptions: PollOption[] }): Promise<Poll>;
-	// getPoll(id: number): Promise<Poll>;
+	getPoll(id: number): Promise<Poll>;
 	getActivePollsForChat(id: number): Promise<Poll[]>;
-	// addOrUpdateAnswer(poll: Poll, user: User, answer: string): Promise<PollAnswer>;
+	addOrUpdateAnswer(poll: Poll, user: User, answer: string): Promise<PollAnswer>;
 
 	createPollOption(title: string, value: string): PollOption;
 }

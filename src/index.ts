@@ -15,10 +15,10 @@ interface CustomContextMessageUpdate extends ContextMessageUpdate {
 
 const bot: Telegraf<CustomContextMessageUpdate> = new Telegraf(config.BOT_TOKEN);
 
-bot.use((ctx, next) => {
-	console.log(ctx.update);
-	return next();
-});
+// bot.use((ctx, next) => {
+// 	console.log(Date.now(), ctx.update);
+// 	return next();
+// });
 
 bot.on('new_chat_members', (ctx) => {
 	const { me, message: { chat: { id, title, type } } } = ctx;
@@ -86,18 +86,18 @@ bot.command('test', (ctx) => {
 	// ctx.reply('Will close keyboard', Extra.markup(Markup.removeKeyboard()));
 });
 
-// bot.action(/poll_(?<pollId>.*?)_(?<answer>.*)/, async (ctx) => {
-// 	const { from: { id }, match: { groups: { pollId, answer } } } = ctx;
-// 	const user = await ctx.db.User.getUser(id);
-// 	const poll = await ctx.db.Poll.getPoll(pollId);
+(bot as any).action(/poll_(?<pollId>.*?)_(?<answer>.*)/, async (ctx) => {
+	const { from: { id }, match: { groups: { pollId, answer } } } = ctx;
+	const user = await ctx.dataProvider.getUser(id);
+	const poll = await ctx.dataProvider.getPoll(pollId);
 
-// 	if (poll && poll.endDate > Date.now()) {
-// 		await ctx.db.Poll.updateAnswer(poll, user, answer);
-// 		return ctx.answerCbQuery(translation.thanksForTheAnswer);
-// 	} else {
-// 		return ctx.answerCbQuery(translation.pollUnavailable);
-// 	}
-// });
+	if (poll && Date.now() > poll.endDate) {
+		return ctx.answerCbQuery(RUTranslates.pollUnavailable);
+	}
+
+	await ctx.dataProvider.addOrUpdateAnswer(poll, user, answer);
+	return ctx.answerCbQuery(RUTranslates.thanksForTheAnswer);
+});
 
 bot.context.dataProvider = mongooseProvider;
 bot.context.dataProvider.init().then(
