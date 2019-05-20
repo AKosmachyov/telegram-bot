@@ -6,5 +6,6 @@ export default {
     pollStarted: "Ваш опрос создан",
     thanksForTheAnswer: "Спасибо! Ваш ответ принят",
     pollUnavailable: "Опрос больше недоступен",
-    pollNotExist: "Данный опрос не найден!"
+    pollNotExist: "Данный опрос не найден!",
+    noCreatedPollsForYou: "Вы еще не создавали опросы"
 }

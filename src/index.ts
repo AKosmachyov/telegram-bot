@@ -2,7 +2,7 @@ import Telegraf, { Extra, Markup, ContextMessageUpdate, Composer } from 'telegra
 
 import { DataProvider, PollOption, User, Poll } from './dataProvider';
 import mongooseProvider from './mongoose';
-import { createLinkToBot, extractParams, createPollMarkup, createResult } from './utils';
+import { createLinkToBot, extractParams, createPollMarkup, createResult, createPollInfo } from './utils';
 import RUTranslates from './locales/ru';
 
 const config = require('../config.json');
@@ -16,8 +16,8 @@ interface CustomContextMessageUpdate extends ContextMessageUpdate {
 const bot: Telegraf<CustomContextMessageUpdate> = new Telegraf(config.BOT_TOKEN);
 
 // bot.use((ctx, next) => {
-// 	console.log(Date.now(), ctx.update);
-// 	return next();
+// 	ctx.reply('__');
+// 	// return next();
 // });
 
 bot.on('new_chat_members', (ctx) => {
@@ -33,6 +33,14 @@ bot.on('new_chat_members', (ctx) => {
 	});
 	const botLink = createLinkToBot(me, id);
 	ctx.reply(`${RUTranslates.completeRegistration} ${botLink}`);
+});
+
+bot.on('left_chat_member', (ctx) => {
+	const { me, message: { chat: { id } } } = ctx;
+	const botWasRemoved = (ctx as any).message.left_chat_member.username == me;
+	if (botWasRemoved) {
+		ctx.dataProvider.removeChat(id);
+	}
 });
 
 bot.start(async (ctx) => {
@@ -70,9 +78,10 @@ bot.command('poll', async (ctx) => {
 	const poll = await ctx.dataProvider.addPoll({
 		title: 'Проверка присутствия',
 		chat: chat,
-		pollOptions: options
+		pollOptions: options,
+		user: user
 	});
-	ctx.reply(RUTranslates.pollStarted);
+	await ctx.reply(RUTranslates.pollStarted);
 	sendPoll(ctx, chat.users, poll);
 });
 
@@ -81,15 +90,14 @@ function sendPoll(ctx, users: User[], poll: Poll) {
 	users.forEach((user) => ctx.telegram.sendMessage(user.telegramId, poll.title, pollMarkup));
 }
 
-bot.command('test', (ctx) => {
-	ctx.reply('Will close keyboard');
-	// ctx.reply('Will close keyboard', Extra.markup(Markup.removeKeyboard()));
-});
-
-(bot as any).action(/poll_(?<pollId>.*?)_(?<answer>.*)/, async (ctx) => {
+(bot as any).action(/poll_answer_(?<pollId>.*?)_(?<answer>.*)/, async (ctx) => {
 	const { from: { id }, match: { groups: { pollId, answer } } } = ctx;
 	const user = await ctx.dataProvider.getUser(id);
 	const poll = await ctx.dataProvider.getPoll(pollId);
+
+	if (!poll) {
+		return ctx.answerCbQuery(RUTranslates.pollNotExist);
+	}
 
 	if (poll && Date.now() > poll.endDate) {
 		return ctx.answerCbQuery(RUTranslates.pollUnavailable);
@@ -99,14 +107,49 @@ bot.command('test', (ctx) => {
 	return ctx.answerCbQuery(RUTranslates.thanksForTheAnswer);
 });
 
-bot.command('result', async (ctx) => {
-	const poll = await ctx.dataProvider.getPoll('5ce1bdd9d7392ab17e5bdc0d', true);
+(bot as any).action(/poll_result_(?<pollId>.*)/, async (ctx) => {
+	const pollId = ctx.match.groups.pollId;
+
+	if (!pollId) {
+		return ctx.answerCbQuery(RUTranslates.pollNotExist);
+	}
+
+	const poll = await ctx.dataProvider.getPoll(pollId, true);
 	if (!poll) {
-		ctx.reply(RUTranslates.pollNotExist);
+		ctx.answerCbQuery(RUTranslates.pollNotExist);
 		return;
 	}
+	ctx.answerCbQuery('');
 	ctx.reply(createResult(poll));
-})
+});
+
+(bot as any).action(/poll_remove_(?<pollId>.*)/, async (ctx) => {
+	const { match: { groups: { pollId } }, callbackQuery: { message: { message_id } } } = ctx;
+	if (!pollId) {
+		return ctx.answerCbQuery(RUTranslates.pollNotExist);
+	}
+
+	await ctx.dataProvider.removePoll(pollId);
+	ctx.deleteMessage(message_id);
+	ctx.answerCbQuery('');
+});
+
+bot.command('polls', async (ctx) => {
+	const { from: { id } } = ctx;
+
+	const user = await ctx.dataProvider.getUser(id);
+
+	const polls = await ctx.dataProvider.getPollsForUser(user);
+
+	if (polls.length == 0) {
+		return ctx.reply(RUTranslates.noCreatedPollsForYou);
+	}
+
+	polls.forEach((poll) => {
+		const options = createPollInfo(poll);
+		ctx.reply(options.message, options.extra);
+	});
+});
 
 bot.context.dataProvider = mongooseProvider;
 bot.context.dataProvider.init().then(

@@ -1,5 +1,6 @@
 import { Markup } from 'telegraf';
 import { PollOption, Poll } from './dataProvider';
+import { ExtraReplyMessage } from 'telegraf/typings/telegram-types';
 
 export function createLinkToBot(me, chatId): string {
 	return `https://telegram.me/${me}?start=from_${chatId}`;
@@ -27,7 +28,20 @@ export function extractParams(startText) {
 export function createPollMarkup(options: { pollId: string; pollOptions: PollOption[] }) {
 	const { pollId, pollOptions } = options;
 	const keyboards = pollOptions.map(({ title, value }) => [
-		Markup.callbackButton(title, `poll_${pollId}_${value}`)
+		Markup.callbackButton(title, `poll_answer_${pollId}_${value}`)
 	]);
 	return (Markup.inlineKeyboard(keyboards) as any).extra();
+}
+
+export function createPollInfo(poll: Poll): { message: string; extra: ExtraReplyMessage } {
+	let date = new Date(poll.createDate);
+	const extra = (Markup.inlineKeyboard([
+		[ Markup.callbackButton('View', `poll_result_${poll.id}`) ],
+		[ Markup.callbackButton('Remove', `poll_remove_${poll.id}`) ]
+	]) as any).extra();
+	const message = `${date.toLocaleDateString('ru')} \n${poll.title}`;
+	return {
+		message,
+		extra
+	};
 }

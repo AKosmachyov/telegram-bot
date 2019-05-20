@@ -5,6 +5,7 @@ const PollSchema = new Schema({
 	title: String,
 	createDate: Date,
 	endDate: Date,
+	owner: { type: Schema.Types.ObjectId, ref: 'User' },
 
 	pollOptions: [
 		{

@@ -44,6 +44,10 @@ class MongooseProvider implements DataProvider {
 		return Promise.resolve();
 	}
 
+	async removeChat(telegramId: number): Promise<void> {
+		return await ChatModel.deleteOne({ telegramId: Types.ObjectId(telegramId) }).then();
+	}
+
 	// User
 
 	getUser(telegramId: number): Promise<User> {
@@ -67,8 +71,9 @@ class MongooseProvider implements DataProvider {
 
 	// // Poll
 
-	addPoll(options: { title: string; chat: Chat; pollOptions: PollOption[] }): Promise<Poll> {
-		const { title, chat, pollOptions } = options;
+	addPoll(options: { title: string; chat: Chat; pollOptions: PollOption[]; user: User }): Promise<Poll> {
+		const { title, chat, pollOptions, user: { id: userId } } = options;
+		const owner = Types.ObjectId(userId);
 
 		const now = new Date();
 		const expirationDate = new Date();
@@ -82,7 +87,8 @@ class MongooseProvider implements DataProvider {
 			title,
 			createDate,
 			endDate,
-			pollOptions
+			pollOptions,
+			owner
 		});
 
 		return poll.save();
@@ -98,6 +104,10 @@ class MongooseProvider implements DataProvider {
 
 	getActivePollsForChat(id: string): Promise<Poll[]> {
 		return PollModel.find({ chat: id, endDate: { $gt: Date.now() } });
+	}
+
+	getPollsForUser(user: User): Promise<Poll[]> {
+		return PollModel.find({ owner: Types.ObjectId(user.id) });
 	}
 
 	async addOrUpdateAnswer(poll: Poll, user: User, answer: string): Promise<PollAnswer> {
@@ -125,6 +135,10 @@ class MongooseProvider implements DataProvider {
 		}
 
 		return updateResult;
+	}
+
+	removePoll(id: string): Promise<void> {
+		return PollModel.deleteOne({ _id: Types.ObjectId(id) }).then();
 	}
 
 	//
