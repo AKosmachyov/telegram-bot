@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf';
-import { PollOption, Poll } from './dataProvider';
+import { PollOption, Poll, User } from './dataProvider';
 import { ExtraReplyMessage } from 'telegraf/typings/telegram-types';
 
 export function createLinkToBot(me, chatId): string {
@@ -44,4 +44,9 @@ export function createPollInfo(poll: Poll): { message: string; extra: ExtraReply
 		message,
 		extra
 	};
+}
+
+export function sendPoll(ctx, users: User[], poll: Poll) {
+	const pollMarkup = createPollMarkup({ pollId: poll.id, pollOptions: poll.pollOptions });
+	users.forEach((user) => ctx.telegram.sendMessage(user.telegramId, poll.title, pollMarkup));
 }
