@@ -1,7 +1,7 @@
 import BOT from './bot';
 
 import { PollOption } from './dataProvider';
-import { extractParams, createResult, createPollInfo, sendPoll, parseCommandParams, createChatInfo } from './utils';
+import { extractParams, createResult, createPollInfo, sendPoll, parseCommandParams, createChatInfo, MENU } from './utils';
 import RUTranslates from './locales/ru';
 
 BOT.start(async (ctx) => {
@@ -130,6 +130,9 @@ BOT.command('polls', async (ctx) => {
 		ctx.reply(options.message, options.extra);
 	});
 });
+
+BOT.command('help', (ctx) => ctx.replyWithMarkdown(MENU));
+BOT.on('text', (ctx) => ctx.replyWithMarkdown(MENU));
 
 BOT.context.dataProvider.init().then(
 	() => {

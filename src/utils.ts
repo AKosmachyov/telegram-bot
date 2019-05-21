@@ -66,3 +66,11 @@ export function createChatInfo(chats: Chat[]): string {
 	const chatInfo = chats.map((chat, i) => `${i + 1}) ${chat.title} ${chat.id}`);
 	return chatInfo.join('\n');
 }
+
+export const MENU = 
+`
+/chats - получить чаты
+/polls - посмотреть результаты опросов
+/poll *Текст опроса* / *вариант 1* ; *вариант 2* / *chat id* - создать опрос
+/help - получить список доступных команд
+`
