@@ -78,7 +78,7 @@ class MongooseProvider implements DataProvider {
 		);
 	}
 
-	// // Poll
+	// Poll
 
 	addPoll(options: { title: string; chat: Chat; pollOptions: PollOption[]; user: User }): Promise<Poll> {
 		const { title, chat, pollOptions, user: { id: userId } } = options;
@@ -150,10 +150,14 @@ class MongooseProvider implements DataProvider {
 		return PollModel.deleteOne({ _id: Types.ObjectId(id) }).then();
 	}
 
-	//
+	// Utils
 
 	createPollOption(title: string, value: string): PollOption {
 		return { title, value };
+	}
+
+	isValidId(id: string): boolean {
+		return Types.ObjectId.isValid(id);
 	}
 }
 

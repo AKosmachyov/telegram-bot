@@ -19,6 +19,7 @@ export interface DataProvider {
 	removePoll(id: string): Promise<void>;
 
 	createPollOption(title: string, value: string): PollOption;
+	isValidId(id: string): boolean;
 }
 
 export interface Chat {

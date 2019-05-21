@@ -46,7 +46,7 @@ BOT.command('poll', async (ctx) => {
 
 	const [ title, pollOptions, chatId ] = parseCommandParams(text, command.length) as [string, string[], string];
 
-	if (!title || !pollOptions || !chatId) {
+	if (!title || !pollOptions || !chatId || !ctx.dataProvider.isValidId(chatId)) {
 		return ctx.reply('Error');
 	}
 
@@ -118,7 +118,6 @@ BOT.command('polls', async (ctx) => {
 	const { from: { id } } = ctx;
 
 	const user = await ctx.dataProvider.getUser(id);
-
 	const polls = await ctx.dataProvider.getPollsForUser(user);
 
 	if (polls.length == 0) {
