@@ -31,7 +31,16 @@ class MongooseProvider implements DataProvider {
 		return chat.save();
 	}
 
-	getChat(telegramId: number): Promise<Chat> {
+	getChat(id: string, withUser = false): Promise<Chat> {
+		const req = ChatModel.findOne({ _id: id });
+		
+		if (withUser) {
+			return req.populate('users');
+		}
+		return req;
+	}
+
+	getChatByTelegramId(telegramId: number): Promise<Chat> {
 		return ChatModel.findOne({ telegramId });
 	}
 

@@ -1,11 +1,7 @@
-import Telegraf, { Extra, Markup, ContextMessageUpdate, Composer } from 'telegraf';
-
 import BOT from './bot';
 
-const pollOptions = [ 'На паре 👨🏼‍💻', 'В пути 🚕', 'Отсутствую 👣' ];
-
 import { PollOption } from './dataProvider';
-import { extractParams, createResult, createPollInfo, sendPoll } from './utils';
+import { extractParams, createResult, createPollInfo, sendPoll, parseCommandParams, createChatInfo } from './utils';
 import RUTranslates from './locales/ru';
 
 BOT.start(async (ctx) => {
@@ -22,7 +18,7 @@ BOT.start(async (ctx) => {
 
 	if (params.from) {
 		const { from } = params;
-		const chat = await ctx.dataProvider.getChat(from);
+		const chat = await ctx.dataProvider.getChatByTelegramId(from);
 		await ctx.dataProvider.addUserForChat(chat.id, user);
 
 		const polls = await ctx.dataProvider.getActivePollsForChat(chat.id);
@@ -32,16 +28,39 @@ BOT.start(async (ctx) => {
 	ctx.reply(`${thankYou} ${forRegistration}, ${first_name}!`);
 });
 
-BOT.command('poll', async (ctx) => {
+BOT.command('chats', async (ctx) => {
 	const { from: { id } } = ctx;
 	const user = await ctx.dataProvider.getUser(id);
 	const chats = await ctx.dataProvider.getChatForUser(user.id);
+	if (chats.length == 0) {
+		return ctx.reply(RUTranslates.noGroups);
+	}
 
-	const chat = chats[0];
+	ctx.replyWithMarkdown(createChatInfo(chats));
+});
+
+// Usage examples:
+// /poll title_text / option1 ; option2 / chat_id
+BOT.command('poll', async (ctx) => {
+	const { from: { id }, message: { text, entities: [ command ] } } = ctx;
+
+	const [ title, pollOptions, chatId ] = parseCommandParams(text, command.length) as [string, string[], string];
+
+	if (!title || !pollOptions || !chatId) {
+		return ctx.reply('Error');
+	}
+
+	//TODO check permissions for chat
+	const user = await ctx.dataProvider.getUser(id);
+	const chat = await ctx.dataProvider.getChat(chatId, true);
+
+	if (!chat) {
+		return ctx.reply('Error');
+	}
 
 	const options: PollOption[] = pollOptions.map((el, i) => ctx.dataProvider.createPollOption(el, i.toString()));
 	const poll = await ctx.dataProvider.addPoll({
-		title: 'Проверка присутствия',
+		title: title,
 		chat: chat,
 		pollOptions: options,
 		user: user
@@ -80,7 +99,8 @@ BOT.command('poll', async (ctx) => {
 		return;
 	}
 	ctx.answerCbQuery('');
-	ctx.reply(createResult(poll));
+	const pollResult = createResult(poll);
+	ctx.reply(pollResult.length ? pollResult : RUTranslates.noAnswersForPoll);
 });
 
 (BOT as any).action(/poll_remove_(?<pollId>.*)/, async (ctx) => {

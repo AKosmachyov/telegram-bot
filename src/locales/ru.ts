@@ -7,5 +7,7 @@ export default {
     thanksForTheAnswer: "Спасибо! Ваш ответ принят",
     pollUnavailable: "Опрос больше недоступен",
     pollNotExist: "Данный опрос не найден!",
-    noCreatedPollsForYou: "Вы еще не создавали опросы"
+    noCreatedPollsForYou: "Вы еще не создавали опросы",
+    noAnswersForPoll: "На данный опрос ещё нету ответов",
+    noGroups: "Бот не был добавлен в группы",
 }

@@ -2,7 +2,8 @@ export interface DataProvider {
 	init(): Promise<any>;
 
 	addChat(options: { telegramId: number; title: string; chatType: string }): Promise<Chat>;
-	getChat(telegramId: number): Promise<Chat>;
+	getChat(id: string, withUser?: boolean): Promise<Chat>;
+	getChatByTelegramId(telegramId: number): Promise<Chat>;
 	getChatForUser(userId: string): Promise<Chat[]>;
 	addUserForChat(chatId: string, user: User): Promise<void>;
 	removeChat(telegramId: number): Promise<void>;

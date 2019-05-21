@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf';
-import { PollOption, Poll, User } from './dataProvider';
+import { PollOption, Poll, User, Chat } from './dataProvider';
 import { ExtraReplyMessage } from 'telegraf/typings/telegram-types';
 
 export function createLinkToBot(me, chatId): string {
@@ -23,6 +23,17 @@ export function extractParams(startText) {
 		objParams[key] = value || true;
 	});
 	return objParams;
+}
+
+export function parseCommandParams(text: string, startFrom: number): Array<string | string[]> {
+	const textParams = text.slice(startFrom);
+	return textParams.split('/').map((el) => {
+		// pars embeded array
+		if (el.indexOf(';') > -1) {
+			return el.split(';').map((el) => el.trim());
+		}
+		return el.trim();
+	});
 }
 
 export function createPollMarkup(options: { pollId: string; pollOptions: PollOption[] }) {
@@ -49,4 +60,9 @@ export function createPollInfo(poll: Poll): { message: string; extra: ExtraReply
 export function sendPoll(ctx, users: User[], poll: Poll) {
 	const pollMarkup = createPollMarkup({ pollId: poll.id, pollOptions: poll.pollOptions });
 	users.forEach((user) => ctx.telegram.sendMessage(user.telegramId, poll.title, pollMarkup));
+}
+
+export function createChatInfo(chats: Chat[]): string {
+	const chatInfo = chats.map((chat, i) => `${i + 1}) ${chat.title} ${chat.id}`);
+	return chatInfo.join('\n');
 }
