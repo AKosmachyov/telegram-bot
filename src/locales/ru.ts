@@ -1,8 +1,8 @@
-const pollComand = '/poll *Текст опроса* / *вариант 1* ; *вариант 2* / *chat id*';
+const pollComand = '/poll Текст опроса / вариант 1 ; *вариант 2';
 const menu = `
 /chats - получить чаты
 /polls - посмотреть результаты опросов
-${pollComand} - создать опрос
+/poll *Текст опроса* / *вариант 1* ; *вариант 2* / *chat id* - создать опрос
 /help - получить список доступных команд
 `;
 
@@ -24,5 +24,9 @@ export default {
 	refresh: 'Обновить',
 	completed: 'Выполнено',
 	answered: 'Ответили',
-	menu: menu
+	syntaxError: 'Команда написана с ошибкой',
+	menu: menu,
+	commands: {
+		pollComand
+	} 
 };

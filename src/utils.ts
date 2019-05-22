@@ -3,8 +3,15 @@ import { PollOption, Poll, User, Chat } from './dataProvider';
 import { ExtraReplyMessage } from 'telegraf/typings/telegram-types';
 import RUTranslates from './locales/ru';
 
-export function createLinkToBot(me, chatId): string {
-	return `https://telegram.me/${me}?start=from_${chatId}`;
+export function createLinkToBot(botName: string, options: { telegramChatId?: number; pollId?: string }): string {
+	const { telegramChatId, pollId } = options;
+	if (telegramChatId) {
+		return `https://telegram.me/${botName}?start=from_${telegramChatId}`;
+	}
+
+	if (pollId) {
+		return `https://telegram.me/${botName}?start=poll_${pollId}`;
+	}
 }
 
 export function extractStartParams(startText) {

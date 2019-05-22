@@ -1,7 +1,7 @@
 import BOT from './bot';
 
-import { PollOption } from './dataProvider';
-import { extractStartParams, parseCommandParams, createPollDetailsMarkup, sendPollForUsers, createChatInfoMarkup } from './utils';
+import { PollOption, Chat } from './dataProvider';
+import { extractStartParams, parseCommandParams, createPollDetailsMarkup, sendPollForUsers, createChatInfoMarkup, createLinkToBot } from './utils';
 import RUTranslates from './locales/ru';
 
 // Start command
@@ -18,7 +18,7 @@ BOT.start(async (ctx) => {
 		lastName: last_name
 	});
 
-	const params: { from?: number } = extractStartParams(text);
+	const params: { from?: number, poll?: string } = extractStartParams(text);
 
 	if (params.from) {
 		const { from } = params;
@@ -28,6 +28,17 @@ BOT.start(async (ctx) => {
 		const polls = await ctx.dataProvider.getActivePollsForChat(chat.id);
 		polls.forEach((poll) => sendPollForUsers(ctx, [ user ], poll));
 		return;
+	}
+
+	if (ctx.dataProvider.isValidId(params.poll)) {
+		const { poll: pollId } = params;
+
+		const poll = await ctx.dataProvider.getPoll(pollId);
+
+		if (poll) {
+			sendPollForUsers(ctx, [ user ], poll);
+			return;
+		}
 	}
 
 	ctx.reply(`${thankYou} ${forRegistration}, ${first_name}!`);
@@ -51,32 +62,44 @@ BOT.command('chats', async (ctx) => {
 // Create poll
 // example:
 // /poll {title_text} / {option1} ; {option2} / {chat_id}
+// /poll {title_text} / {option1} ; {option2}
 BOT.command('poll', async (ctx) => {
-	const { from: { id }, message: { text, entities: [ command ] } } = ctx;
+	const { me, from: { id }, message: { text, entities: [ command ] } } = ctx;
 
 	const [ title, pollOptions, chatId ] = parseCommandParams(text, command.length) as [string, string[], string];
 
-	if (!title || !Array.isArray(pollOptions) || pollOptions.length == 0 || !ctx.dataProvider.isValidId(chatId)) {
-		return ctx.reply('Error');
+	if (!title || !Array.isArray(pollOptions) || pollOptions.length == 0) {
+		return ctx.reply(`${RUTranslates.syntaxError} \n${RUTranslates.commands.pollComand}`);
+	}
+
+	let pollChat: Chat | undefined;
+
+	if (ctx.dataProvider.isValidId(chatId)) {
+		const chat = await ctx.dataProvider.getChat(chatId, true);
+		if (!chat) {
+			return ctx.reply(RUTranslates.noGroups);
+		}
+		pollChat = chat;
 	}
 
 	//TODO check permissions for chat
 	const user = await ctx.dataProvider.getUser(id);
-	const chat = await ctx.dataProvider.getChat(chatId, true);
-
-	if (!chat) {
-		return ctx.reply('Error');
-	}
 
 	const options: PollOption[] = pollOptions.map((el, i) => ctx.dataProvider.createPollOption(el, i.toString()));
 	const poll = await ctx.dataProvider.addPoll({
 		title: title,
-		chat: chat,
+		chat: pollChat,
 		pollOptions: options,
 		user: user
 	});
-	await ctx.reply(RUTranslates.pollStarted);
-	sendPollForUsers(ctx, chat.users, poll);
+
+	const pollLink = !pollChat ? createLinkToBot(me, { pollId: poll.id }) : '';
+
+	await ctx.reply(`${RUTranslates.pollStarted} ${pollLink}`);
+
+	if (pollChat) {
+		sendPollForUsers(ctx, pollChat.users, poll);	
+	}
 });
 
 // Get all polls for user

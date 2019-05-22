@@ -30,7 +30,7 @@ bot.on('new_chat_members', (ctx) => {
 		title: title,
 		chatType: type
 	});
-	const botLink = createLinkToBot(me, id);
+	const botLink = createLinkToBot(me, {telegramChatId: id});
 	ctx.reply(`${RUTranslates.completeRegistration} ${botLink}`);
 });
 

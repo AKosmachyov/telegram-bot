@@ -39,7 +39,7 @@ export interface User {
 
 export interface Poll {
 	id: string;
-	chat: Chat;
+	chat: Chat | undefined;
 	title: string;
 	owner: User;
 	createDate: Date;
