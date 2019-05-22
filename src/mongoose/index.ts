@@ -63,15 +63,16 @@ class MongooseProvider implements DataProvider {
 		return UserModel.findOne({ telegramId: telegramId });
 	}
 
-	addOrUpdateUser(options: { telegramId: number; firstName: string; lastName: string }): Promise<User> {
-		const { telegramId, firstName, lastName } = options;
+	addOrUpdateUser(options: { telegramId: number; firstName: string; lastName: string, userName: string }): Promise<User> {
+		const { telegramId, firstName, lastName, userName } = options;
 		return UserModel.findOneAndUpdate(
 			{ telegramId: telegramId },
 			{
 				$set: {
 					userId: telegramId,
 					firstName: firstName,
-					lastName: lastName
+					lastName: lastName,
+					userName: userName
 				}
 			},
 			{ upsert: true, new: true }
@@ -139,8 +140,9 @@ class MongooseProvider implements DataProvider {
 			}
 		);
 
+
 		if (updateResult.nModified == 0) {
-			return PollModel.updateOne({ _id: poll.id }, { $set: { answers: forInsert } });
+			return PollModel.updateOne({ _id: poll.id }, { $push: { answers: forInsert } });
 		}
 
 		return updateResult;

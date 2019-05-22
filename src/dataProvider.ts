@@ -9,7 +9,7 @@ export interface DataProvider {
 	removeChat(telegramId: number): Promise<void>;
 
 	getUser(telegramId: number): Promise<User>;
-	addOrUpdateUser(options: { telegramId: number; firstName: string; lastName: string }): Promise<User>;
+	addOrUpdateUser(options: { telegramId: number; firstName: string; lastName: string, userName: string }): Promise<User>;
 
 	addPoll(options: { title: string; chat: Chat; pollOptions: PollOption[], user: User }): Promise<Poll>;
 	getPoll(id: string, withUser?: boolean): Promise<Poll>;
@@ -35,6 +35,7 @@ export interface User {
 	telegramId: number;
 	firstName: string;
 	lastName: string;
+	userName: string;
 }
 
 export interface Poll {

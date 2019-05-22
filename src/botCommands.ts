@@ -10,12 +10,13 @@ import RUTranslates from './locales/ru';
 // /start from_{telegramChatId}
 BOT.start(async (ctx) => {
 	const { thankYou, forRegistration } = RUTranslates;
-	const { from: { id, first_name, last_name }, message: { text } } = ctx;
+	const { from: { id, first_name, last_name, username }, message: { text } } = ctx;
 
 	const user = await ctx.dataProvider.addOrUpdateUser({
 		telegramId: id,
-		firstName: first_name,
-		lastName: last_name
+		firstName: first_name || '',
+		lastName: last_name || '',
+		userName: username || ''
 	});
 
 	const params: { from?: number, poll?: string } = extractStartParams(text);
