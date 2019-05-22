@@ -1,10 +1,10 @@
 import BOT from './bot';
 import RUTranslates from './locales/ru';
-import { createResult } from './utils';
+import { createPollResultMarkup, createPollDetailsMarkup } from './utils';
 
 // Set answer for poll
 (BOT as any).action(/poll_answer_(?<pollId>.*?)_(?<answer>.*)/, async (ctx) => {
-    const { from: { id }, match: { groups: { pollId, answer } } } = ctx;
+	const { from: { id }, match: { groups: { pollId, answer } } } = ctx;
 
 	const user = await ctx.dataProvider.getUser(id);
 	const poll = await ctx.dataProvider.getPoll(pollId);
@@ -29,18 +29,18 @@ import { createResult } from './utils';
 		return ctx.answerCbQuery(RUTranslates.pollNotExist);
 	}
 
-    const poll = await ctx.dataProvider.getPoll(pollId, true);
+	const poll = await ctx.dataProvider.getPoll(pollId, true);
 
 	if (!poll) {
 		return ctx.answerCbQuery(RUTranslates.pollNotExist);
-    }
+	}
 
-    ctx.answerCbQuery('');
-    if (poll.answers.length) {
-	    ctx.reply(createResult(poll));
-    } else {
-        ctx.reply(RUTranslates.noAnswersForPoll);
-    }
+	ctx.answerCbQuery('');
+	if (poll.answers.length) {
+		ctx.reply(createPollResultMarkup(poll));
+	} else {
+		ctx.reply(RUTranslates.noAnswersForPoll);
+	}
 });
 
 // Remove poll
@@ -53,4 +53,25 @@ import { createResult } from './utils';
 	await ctx.dataProvider.removePoll(pollId);
 	ctx.deleteMessage(message_id);
 	ctx.answerCbQuery('');
+});
+
+// Refresh the poll info
+(BOT as any).action(/poll_refresh_(?<pollId>.*)/, async (ctx) => {
+	const pollId = ctx.match.groups.pollId;
+
+	if (!pollId) {
+		return ctx.answerCbQuery(RUTranslates.pollNotExist);
+	}
+
+	const poll = await ctx.dataProvider.getPoll(pollId);
+
+	if (!poll) {
+		return ctx.answerCbQuery(RUTranslates.pollNotExist);
+	}
+
+	const markup = createPollDetailsMarkup(poll);
+
+	ctx.editMessageText(markup.message, markup.extra)
+
+	ctx.answerCbQuery(RUTranslates.completed);
 });

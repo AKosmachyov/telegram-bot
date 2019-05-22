@@ -1,3 +1,11 @@
+const pollComand = '/poll *Текст опроса* / *вариант 1* ; *вариант 2* / *chat id*';
+const menu = `
+/chats - получить чаты
+/polls - посмотреть результаты опросов
+${pollComand} - создать опрос
+/help - получить список доступных команд
+`;
+
 export default {
 	thankYou: 'Большое спасибо',
 	forRegistration: 'за регистрацию',
@@ -10,10 +18,11 @@ export default {
 	noCreatedPollsForYou: 'Вы еще не создавали опросы',
 	noAnswersForPoll: 'На данный опрос ещё нету ответов',
 	noGroups: 'Бот не был добавлен в группы',
-	menu: `
-        /chats - получить чаты
-        /polls - посмотреть результаты опросов
-        /poll *Текст опроса* / *вариант 1* ; *вариант 2* / *chat id* - создать опрос
-        /help - получить список доступных команд
-    `
+	invalidParameters: 'Команда указана неверно',
+	results: 'Результаты',
+	remove: 'Удалить',
+	refresh: 'Обновить',
+	completed: 'Выполнено',
+	answered: 'Ответили',
+	menu: menu
 };

@@ -1,6 +1,7 @@
-import { Markup } from 'telegraf';
+import { Markup, Extra } from 'telegraf';
 import { PollOption, Poll, User, Chat } from './dataProvider';
 import { ExtraReplyMessage } from 'telegraf/typings/telegram-types';
+import RUTranslates from './locales/ru';
 
 export function createLinkToBot(me, chatId): string {
 	return `https://telegram.me/${me}?start=from_${chatId}`;
@@ -16,15 +17,6 @@ export function extractStartParams(startText) {
 	return objParams;
 }
 
-export function createResult(poll: Poll): string {
-	const arr = poll.answers.map((userAnswer, index) => {
-		const option = poll.pollOptions.find((el) => el.value == userAnswer.answer);
-		const answer = !!option ? option.title : userAnswer.answer;
-		return `${index + 1}) ${userAnswer.user.lastName} ${userAnswer.user.firstName}: ${answer}`;
-	});
-	return arr.join('\n');
-}
-
 export function parseCommandParams(text: string, startFrom: number): Array<string | string[]> {
 	const textParams = text.slice(startFrom);
 	return textParams.split('/').map((el) => {
@@ -36,7 +28,12 @@ export function parseCommandParams(text: string, startFrom: number): Array<strin
 	});
 }
 
-export function createPollMarkup(options: { pollId: string; pollOptions: PollOption[] }) {
+export function sendPollForUsers(ctx, users: User[], poll: Poll) {
+	const pollMarkup = createPollAnswerMarkup({ pollId: poll.id, pollOptions: poll.pollOptions });
+	users.forEach((user) => ctx.telegram.sendMessage(user.telegramId, poll.title, pollMarkup));
+}
+
+export function createPollAnswerMarkup(options: { pollId: string; pollOptions: PollOption[] }) {
 	const { pollId, pollOptions } = options;
 	const keyboards = pollOptions.map(({ title, value }) => [
 		Markup.callbackButton(title, `poll_answer_${pollId}_${value}`)
@@ -44,25 +41,35 @@ export function createPollMarkup(options: { pollId: string; pollOptions: PollOpt
 	return (Markup.inlineKeyboard(keyboards) as any).extra();
 }
 
-export function createPollInfo(poll: Poll): { message: string; extra: ExtraReplyMessage } {
+export function createPollDetailsMarkup(poll: Poll): { message: string; extra: ExtraReplyMessage } {
 	let date = new Date(poll.createDate);
-	const extra = (Markup.inlineKeyboard([
-		[ Markup.callbackButton('View', `poll_result_${poll.id}`) ],
-		[ Markup.callbackButton('Remove', `poll_remove_${poll.id}`) ]
-	]) as any).extra();
-	const message = `${date.toLocaleDateString('ru')} \n${poll.title}`;
+	const answersCount = poll.answers.length;
+	const message = `${date.toLocaleDateString('ru')} ${poll.title} \n${RUTranslates.answered}: ${answersCount}`;
+
+	const buttons = [
+		[ Markup.callbackButton(`👀 ${RUTranslates.results}`, `poll_result_${poll.id}`, answersCount == 0) ],
+		[ Markup.callbackButton(`⟳ ${RUTranslates.refresh}`, `poll_refresh_${poll.id}`) ],
+		[ Markup.callbackButton(`🗑 ${RUTranslates.remove}`, `poll_remove_${poll.id}`) ]
+	];
+
+	const extra = Extra.markup((m) => m.inlineKeyboard(buttons)) as ExtraReplyMessage;
 	return {
 		message,
 		extra
 	};
 }
 
-export function sendPoll(ctx, users: User[], poll: Poll) {
-	const pollMarkup = createPollMarkup({ pollId: poll.id, pollOptions: poll.pollOptions });
-	users.forEach((user) => ctx.telegram.sendMessage(user.telegramId, poll.title, pollMarkup));
+export function createPollResultMarkup(poll: Poll): string {
+	const mapSource: [string, string][] = poll.pollOptions.map((el) => [ el.value, el.title ]);
+	const answersMap = new Map(mapSource);
+	const arr = poll.answers.map((userAnswer, index) => {
+		const answer = answersMap.get(userAnswer.answer) || userAnswer.answer;
+		return `${index + 1}) ${userAnswer.user.lastName} ${userAnswer.user.firstName}: ${answer}`;
+	});
+	return arr.join('\n');
 }
 
-export function createChatInfo(chats: Chat[]): string {
+export function createChatInfoMarkup(chats: Chat[]): string {
 	const chatInfo = chats.map((chat, i) => `${i + 1}) ${chat.title} ${chat.id}`);
 	return chatInfo.join('\n');
 }

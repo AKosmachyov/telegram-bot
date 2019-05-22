@@ -1,4 +1,4 @@
-import BOT, { init } from './bot';
+import { init } from './bot';
 require('./botCommands');
 require('./botActions');
 
