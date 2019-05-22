@@ -5,13 +5,11 @@ import mongooseProvider from './mongoose';
 import { createLinkToBot } from './utils';
 import RUTranslates from './locales/ru';
 
-const config = require('../config.json');
-
 interface CustomContextMessageUpdate extends ContextMessageUpdate {
 	dataProvider: DataProvider;
 }
 
-const bot: Telegraf<CustomContextMessageUpdate> = new Telegraf(config.BOT_TOKEN);
+const bot: Telegraf<CustomContextMessageUpdate> = new Telegraf(process.env.BOT_TOKEN);
 bot.context.dataProvider = mongooseProvider;
 
 // bot.use((ctx, next) => {
@@ -43,9 +41,3 @@ bot.on('left_chat_member', (ctx) => {
 });
 
 export default bot;
-export function init(): Promise<void> {
-	return Promise.all([ bot.context.dataProvider.init(), bot.launch() ]).then(
-		() => console.log('Bot was started'),
-		(err) => console.error("Bot couldn't start", err)
-	);
-}

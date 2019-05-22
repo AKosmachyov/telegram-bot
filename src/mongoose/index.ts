@@ -1,11 +1,9 @@
 import { DataProvider, Chat, User, Poll, PollAnswer, PollOption } from '../dataProvider';
-import { Connection, set, connect, connection, Types } from 'mongoose';
+import { Connection, set, connect, connection, createConnection, Types } from 'mongoose';
 
 import UserModel from './UserModel';
 import ChatModel from './ChatModel';
 import PollModel from './PollModel';
-
-const config = require('../../config.json');
 
 set('useNewUrlParser', true);
 set('useFindAndModify', false);
@@ -14,12 +12,12 @@ set('useCreateIndex', true);
 class MongooseProvider implements DataProvider {
 	db: Connection;
 
-	init() {
-		return new Promise((resolve, reject) => {
-			connect(config.DB_URL);
-			this.db = connection;
+	init(): Promise<Connection> {
+		return new Promise(async (resolve, reject) => {
+			this.db = await createConnection(process.env.DB_URL, {bufferCommands: false, bufferMaxEntries: 0 });
 			this.db.on('error', reject);
 			this.db.once('open', resolve);
+			return this.db
 		});
 	}
 
