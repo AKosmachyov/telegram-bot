@@ -1,0 +1,4 @@
+{
+    "BOT_TOKEN": "111111111:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "DB_URL": "mongodb://localhost/bot"
+}
