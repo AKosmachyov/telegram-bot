@@ -43,3 +43,9 @@ bot.on('left_chat_member', (ctx) => {
 });
 
 export default bot;
+export function init(): Promise<void> {
+	return Promise.all([ bot.context.dataProvider.init(), bot.launch() ]).then(
+		() => console.log('Bot was started'),
+		(err) => console.error("Bot couldn't start", err)
+	);
+}

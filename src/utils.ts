@@ -6,16 +6,7 @@ export function createLinkToBot(me, chatId): string {
 	return `https://telegram.me/${me}?start=from_${chatId}`;
 }
 
-export function createResult(poll: Poll): string {
-	const arr = poll.answers.map((userAnswer, index) => {
-		const option = poll.pollOptions.find((el) => el.value == userAnswer.answer);
-		const answer = !!option ? option.title : userAnswer.answer;
-		return `${index + 1}) ${userAnswer.user.lastName} ${userAnswer.user.firstName}: ${answer}`;
-	});
-	return arr.join('\n');
-}
-
-export function extractParams(startText) {
+export function extractStartParams(startText) {
 	const objParams = {};
 	const params = startText.split(' ').slice(1);
 	params.forEach((param) => {
@@ -23,6 +14,15 @@ export function extractParams(startText) {
 		objParams[key] = value || true;
 	});
 	return objParams;
+}
+
+export function createResult(poll: Poll): string {
+	const arr = poll.answers.map((userAnswer, index) => {
+		const option = poll.pollOptions.find((el) => el.value == userAnswer.answer);
+		const answer = !!option ? option.title : userAnswer.answer;
+		return `${index + 1}) ${userAnswer.user.lastName} ${userAnswer.user.firstName}: ${answer}`;
+	});
+	return arr.join('\n');
 }
 
 export function parseCommandParams(text: string, startFrom: number): Array<string | string[]> {
@@ -66,11 +66,3 @@ export function createChatInfo(chats: Chat[]): string {
 	const chatInfo = chats.map((chat, i) => `${i + 1}) ${chat.title} ${chat.id}`);
 	return chatInfo.join('\n');
 }
-
-export const MENU = 
-`
-/chats - получить чаты
-/polls - посмотреть результаты опросов
-/poll *Текст опроса* / *вариант 1* ; *вариант 2* / *chat id* - создать опрос
-/help - получить список доступных команд
-`

@@ -11,7 +11,7 @@ export interface DataProvider {
 	getUser(telegramId: number): Promise<User>;
 	addOrUpdateUser(options: { telegramId: number; firstName: string; lastName: string }): Promise<User>;
 
-	addPoll(options: { title: string; chat: Chat; pollOptions: PollOption[], user: User}): Promise<Poll>;
+	addPoll(options: { title: string; chat: Chat; pollOptions: PollOption[], user: User }): Promise<Poll>;
 	getPoll(id: string, withUser?: boolean): Promise<Poll>;
 	getActivePollsForChat(id: string): Promise<Poll[]>;
 	getPollsForUser(user: User): Promise<Poll[]>;
