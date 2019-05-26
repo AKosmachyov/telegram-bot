@@ -72,7 +72,7 @@ export function createPollResultMarkup(poll: Poll): string {
 	const arr = poll.answers.map((userAnswer, index) => {
 		const answer = answersMap.get(userAnswer.answer) || userAnswer.answer;
 		const { lastName, firstName, userName } = userAnswer.user;
-		const name = (lastName && firstName) ? `${lastName} ${firstName}` : `${userName}`;
+		const name = (lastName && firstName) ? `${lastName} ${firstName}` : `@${userName}`;
 		return `${index + 1}) ${name}: ${answer}`;
 	});
 	return arr.join('\n');
