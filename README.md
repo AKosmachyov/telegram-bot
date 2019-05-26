@@ -1,9 +1,5 @@
 # Poll bot for Telegram
 
-#### Why?
-
-It was a good opportunity to work with the bot and try the Telegram API.
-
 ##### Analogs
 
 - `@vote` - in the results shows only the nickname of the telegram, and not the first name with the last name of the user;
